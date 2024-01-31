@@ -1,0 +1,16 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          donationalerts:
+            client-id: 12047
+            client-secret: XukduNifyT0V5PgSXmfO4r8ukBXtsR1R8MGlFcas
+            authorization-grant-type: authorization_code
+            redirect-uri: http://localhost:8080/login/oauth2/code/donationalerts
+            scope:
+              - oauth-donation-index
+        provider:
+          donationalerts:
+            authorization-uri: https://www.donationalerts.com/oauth/authorize
+            token-uri: https://www.donationalerts.com/oauth/token
