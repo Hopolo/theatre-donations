@@ -16,27 +16,40 @@
 
 package ru.otus.theatredonations.config;
 
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
+import ru.otus.theatredonations.OAuth2UserService;
+import ru.otus.theatredonations.model.donationalerts.DonationAlertsOAuth2User;
+import ru.otus.theatredonations.services.DBServiceDonationAlertsUsers;
 
 /**
  * @author Joe Grandja
  */
-@EnableWebFluxSecurity
 @Configuration
+@RequiredArgsConstructor
+@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class SecurityConfig {
 
+    OAuth2UserService oAuth2UserService;
+    DBServiceDonationAlertsUsers dbServiceDonationAlertsUsers;
+
     @Bean
-    public SecurityWebFilterChain filterChain(ServerHttpSecurity http) {
-        http.authorizeExchange()
-            .anyExchange()
-            .authenticated()
-            .and()
-            .oauth2Login();
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(authorize -> authorize
+                .anyRequest()
+                .authenticated()
+            ).oauth2Login(oauth2 -> oauth2
+                .userInfoEndpoint(userInfo ->
+                                      userInfo.userService(oAuth2UserService)).successHandler((request, response, authentication) -> {
+                    DonationAlertsOAuth2User donationAlertsOAuth2User = (DonationAlertsOAuth2User) authentication.getPrincipal();
+                    dbServiceDonationAlertsUsers.saveUser(donationAlertsOAuth2User);
+                }));
         return http.build();
     }
-
 }
